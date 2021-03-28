@@ -248,7 +248,7 @@ class PS2KeyMap {
  public:
   /**
    * This constructor just sets the default key mapping to US. */
-  PS2KeyMap();
+  PS2KeyMap() : _selected_map(0) {}
 
   /**
    Pass in 2 character string for the ISO 2 letter country code in use
@@ -256,23 +256,28 @@ class PS2KeyMap {
       "US" is built-in default
    Returns 1 for done or 0 for not found.
    */
-  uint8_t selectMap(char*);
+  uint8_t selectMap(char* ISO = (char*)"US");
 
   /**
    Return selected map as a string pointer (2 chars and terminator)    */
-  const char* getMap(void);
+  const char* getMap();
 
   /**
    Pass in unsigned int returned from PS2KeyAdvanced
               Returns 0 for error
                       uint16_t for valid code
    */
-  uint16_t remapKey(uint16_t);
+  uint16_t remapKey(uint16_t code);
 
   /**
     Returns uint8_t version of remapKey ONLY for standard ASCII/UTF-8 codes
     Invalid codes returned as 0
    */
-  uint8_t remapKeyByte(uint16_t);
+  uint8_t remapKeyByte(uint16_t code);
+
+ private:
+  uint16_t scan_map(uint16_t data, uint8_t index);
+
+  uint8_t _selected_map;
 };
 #endif

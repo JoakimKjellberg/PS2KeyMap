@@ -182,11 +182,6 @@
 #include "PS2KeyMap.h"
 #include "PS2KeyData.h"
 
-uint8_t _selected_map;
-
-// Private country code strings
-const char* _USStr[] = { "US" };
-
 
 /* Common function to scan a Look up table table and
    return a value or 0 for not found
@@ -206,7 +201,7 @@ const char* _USStr[] = { "US" };
         data    unsigned int 16 from PS2KeyAdvanced library
         index   index of mapping table to use
 */
-uint16_t scan_map(uint16_t data, uint8_t index) {
+uint16_t PS2KeyMap::scan_map(uint16_t data, uint8_t index) {
   uint16_t idx, result, size;
   uint16_t* maparray;
 
@@ -245,7 +240,7 @@ uint16_t scan_map(uint16_t data, uint8_t index) {
      Returns 1 for done
           or 0 for not found.
 */
-uint8_t PS2KeyMap::selectMap(char* ISO = (char*)_USStr) {
+uint8_t PS2KeyMap::selectMap(char* ISO) {
   uint8_t outer, idx, end;
 
   end = sizeof(_KeyMaps) / sizeof(PS2Advmap);
@@ -270,7 +265,7 @@ uint8_t PS2KeyMap::selectMap(char* ISO = (char*)_USStr) {
 /*
    Return selected map as a string pointer (2 chars and terminator)
 */
-const char* PS2KeyMap::getMap(void) {
+const char* PS2KeyMap::getMap() {
   return (_KeyMaps[_selected_map].name);
 }
 
@@ -370,12 +365,4 @@ uint8_t PS2KeyMap::remapKeyByte(uint16_t code) {
 
   data = remapKey(code);
   return (uint8_t)(data & 0xFF);
-}
-
-
-/*  Class constructor
-   At construction ensure default map selected
-*/
-PS2KeyMap::PS2KeyMap() {
-  _selected_map = 0;
 }

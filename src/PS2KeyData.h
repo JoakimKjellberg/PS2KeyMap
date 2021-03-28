@@ -4,7 +4,7 @@
   Written by Paul Carpenter, PC Services <sales@pcserviceselectronics.co.uk>
   Created September 2014
   Updated January 2016 - Paul Carpenter - add tested on Due and tidy ups for V1.5 Library Management
-	January 2020 - Paul Carpenter - extend library properties for V2.2 of Arduino Library Management
+  January 2020 - Paul Carpenter - extend library properties for V2.2 of Arduino Library Management
     March 2020 - Paul Carpenter - add Spanish and Italian Mappings
     April 2020 - Paul Carpenter - Correct _KeyMaps definition error in last version
 
@@ -37,12 +37,12 @@
 #define PS2KeyData_h
 
 /* Standard ASCII/UTF-8 control Characters */
-#define PS2_BACKSPACE   0x08
-#define PS2_TAB			0x09
-#define PS2_ENTER		0x0D
-#define PS2_ESC			0x1B
-#define PS2_DELETE		0x7F
-#define PS2_SPACE		0x20
+#define PS2_BACKSPACE  0x08
+#define PS2_TAB        0x09
+#define PS2_ENTER      0x0D
+#define PS2_ESC        0x1B
+#define PS2_DELETE     0x7F
+#define PS2_SPACE      0x20
 
 
 /* Standard ASCII control characters array */
@@ -58,9 +58,9 @@ const uint8_t _control_codes[] = {
 
 // convert codes based on SHIFT and not SHIFT only for base US-ASCII
 #if defined(PS2_REQUIRES_PROGMEM)
-const uint16_t PROGMEM _US_ASCII[][ 2 ] = {
+const uint16_t PROGMEM _US_ASCII[][2] = {
 #else
-const uint16_t _US_ASCII[][ 2 ] = {
+const uint16_t _US_ASCII[][2] = {
 #endif
                 { PS2_SHIFT + PS2_KEY_1, '!' },
                 { PS2_SHIFT + PS2_KEY_2, '@' },
@@ -105,9 +105,9 @@ const uint16_t _US_ASCII[][ 2 ] = {
                 };
 
 #if defined(PS2_REQUIRES_PROGMEM)
-const uint16_t PROGMEM _UKmap[][ 2 ] = {
+const uint16_t PROGMEM _UKmap[][2] = {
 #else
-const uint16_t _UKmap[][ 2 ] = {
+const uint16_t _UKmap[][2] = {
 #endif
                 { PS2_SHIFT + '@', '"' },
                 { PS2_SHIFT + '"', '@' },
@@ -121,9 +121,9 @@ const uint16_t _UKmap[][ 2 ] = {
                 };
 #ifdef FRENCH
 #if defined(PS2_REQUIRES_PROGMEM)
-const uint16_t PROGMEM _FRmap[][ 2 ] = {
+const uint16_t PROGMEM _FRmap[][2] = {
 #else
-const uint16_t _FRmap[][ 2 ] = {
+const uint16_t _FRmap[][2] = {
 #endif
                 { '`', PS2_SUPERSCRIPT_TWO },
                 { PS2_SHIFT + '~', PS2_SUPERSCRIPT_TWO },
@@ -213,9 +213,9 @@ const uint16_t _FRmap[][ 2 ] = {
 #endif
 #ifdef GERMAN
 #if defined(PS2_REQUIRES_PROGMEM)
-const uint16_t PROGMEM _DEmap[][ 2 ] = {
+const uint16_t PROGMEM _DEmap[][2] = {
 #else
-const uint16_t _DEmap[][ 2 ] = {
+const uint16_t _DEmap[][2] = {
 #endif
                 { '`', '^' },
                 { PS2_SHIFT + '~', PS2_DEGREE_SIGN },
@@ -276,9 +276,9 @@ const uint16_t _DEmap[][ 2 ] = {
 #endif
 #ifdef SPANISH
 #if defined(PS2_REQUIRES_PROGMEM)
-const uint16_t PROGMEM _ESmap[][ 2 ] = {
+const uint16_t PROGMEM _ESmap[][2] = {
 #else
-const uint16_t _ESmap[][ 2 ] = {
+const uint16_t _ESmap[][2] = {
 #endif
                 { PS2_KEY_SINGLE, PS2_MASCULINE_ORDINAL },
                 { PS2_SHIFT + PS2_KEY_SINGLE, PS2_FEMININE_ORDINAL },
@@ -323,9 +323,9 @@ const uint16_t _ESmap[][ 2 ] = {
 #endif
 #ifdef ITALIAN
 #if defined(PS2_REQUIRES_PROGMEM)
-const uint16_t PROGMEM _ITmap[][ 2 ] = {
+const uint16_t PROGMEM _ITmap[][2] = {
 #else
-const uint16_t _ITmap[][ 2 ] = {
+const uint16_t _ITmap[][2] = {
 #endif
                 { PS2_KEY_SINGLE, '\\' },
                 { PS2_SHIFT + PS2_KEY_SINGLE, '|' },
@@ -367,9 +367,9 @@ const uint16_t _ITmap[][ 2 ] = {
 #endif
 #ifdef SPECIAL
 #if defined(PS2_REQUIRES_PROGMEM)
-const uint16_t PROGMEM _SpecialMap[][ 2 ] = {
+const uint16_t PROGMEM _SpecialMap[][2] = {
 #else
-const uint16_t _SpecialMap[][ 2 ] = {
+const uint16_t _SpecialMap[][2] = {
 #endif
 // Insert your Special mapping DIFFERENCES from US-ASCII here
                 };
@@ -377,31 +377,31 @@ const uint16_t _SpecialMap[][ 2 ] = {
 
 // The following structures define the key maps available
 typedef struct  {
-                char        name[ 3 ];      // 2 Character ISO country code
+                char        name[3];      // 2 Character ISO country code
                 uint8_t     size;           // Number of entries in map array
                 uint16_t    *map;           // Map array pointer
                 } PS2Advmap;
 
-// Actual map structure array ( 2 entries for GB and UK for same map
-// Because many people don't know ISO code for UK is GB )
-const PS2Advmap _KeyMaps[ ] = {
-                { "US", sizeof( _US_ASCII ) / ( 2 * sizeof( uint16_t ) ), (uint16_t *)_US_ASCII },
+// Actual map structure array (2 entries for GB and UK for same map
+// Because many people don't know ISO code for UK is GB)
+const PS2Advmap _KeyMaps[] = {
+                { "US", sizeof(_US_ASCII) / (2 * sizeof(uint16_t)), (uint16_t*)_US_ASCII },
 #ifdef FRENCH
-                { "FR", sizeof( _FRmap ) / ( 2 * sizeof( uint16_t ) ), (uint16_t *)_FRmap },
+                { "FR", sizeof(_FRmap) / (2 * sizeof(uint16_t)), (uint16_t*)_FRmap },
 #endif
 #ifdef GERMAN
-                { "DE", sizeof( _DEmap ) / ( 2 * sizeof( uint16_t ) ), (uint16_t *)_DEmap },
+                { "DE", sizeof(_DEmap) / (2 * sizeof(uint16_t)), (uint16_t*)_DEmap },
 #endif
 #ifdef SPANISH
-                { "ES", sizeof( _ESmap ) / ( 2 * sizeof( uint16_t ) ), (uint16_t *)_ESmap },
+                { "ES", sizeof(_ESmap) / (2 * sizeof(uint16_t)), (uint16_t*)_ESmap },
 #endif
 #ifdef ITALIAN
-                { "IT", sizeof( _ITmap ) / ( 2 * sizeof( uint16_t ) ), (uint16_t *)_ITmap },
+                { "IT", sizeof(_ITmap) / (2 * sizeof(uint16_t)), (uint16_t*)_ITmap },
 #endif
 #ifdef SPECIAL
-                { "--", sizeof( _SpecialMap ) / ( 2 * sizeof( uint16_t ) ), (uint16_t* )_SpecialMap },
+                { "--", sizeof(_SpecialMap) / (2 * sizeof(uint16_t)), (uint16_t*)_SpecialMap },
 #endif
-                { "UK", sizeof( _UKmap ) / ( 2 * sizeof( uint16_t ) ), (uint16_t *)_UKmap },
-                { "GB", sizeof( _UKmap ) / ( 2 * sizeof( uint16_t ) ), (uint16_t *)_UKmap }
+                { "UK", sizeof(_UKmap) / (2 * sizeof(uint16_t)), (uint16_t*)_UKmap },
+                { "GB", sizeof(_UKmap) / (2 * sizeof(uint16_t)), (uint16_t*)_UKmap }
                 };
 #endif

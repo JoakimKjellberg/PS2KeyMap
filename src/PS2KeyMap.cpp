@@ -183,99 +183,67 @@
 #include "PS2KeyData.h"
 
 
-/* Common function to scan a Look up table table and
-   return a value or 0 for not found
+/* Searches a key map for the given key combination and returns the
+   corresponding character, or 0 if not found.
 
-   Checks using default mask of keycode plus ALT_GR and SHIFT
-   To add in match other modifiers set mask to combination of
-        PS2_CTRL        match either Control key as well
-        PS2_ALT         match left ALT as well
-        PS2_GUI         match either GUI key as well
+   Checks using default mask of keycode plus ALT_GR and SHIFT.
+   To match other modifiers, you need to modify this function and set the
+   mask to a combination of:
+   - PS2_CTRL  match either Control key as well
+   - PS2_ALT   match left ALT as well
+   - PS2_GUI   match either GUI key as well
 
    Assumes map table has 2 dimensions of type prog_uint16_t (in Flash memory)
-   i.e. an array like test[][2]
-        First entry  (test[][0]) is item to match
-        Second entry (test[][1]) is item to return
+   i.e. an array like test[][2], where:
+   - First entry  (test[x][0]) is item to match
+   - Second entry (test[x][1]) is item to return
 
    Parameters are
-        data    unsigned int 16 from PS2KeyAdvanced library
-        index   index of mapping table to use
+        keyCode   unsigned int 16 from PS2KeyAdvanced::read().
+        mapIndex  index of mapping table to use.
 */
-uint16_t PS2KeyMap::scan_map(uint16_t data, uint8_t index) {
-  uint16_t idx, result, size;
-  uint16_t* maparray;
+uint16_t PS2KeyMap::scanMap(uint16_t keyCode, uint8_t mapIndex) {
+  const uint16_t *mapArray = _KeyMaps[mapIndex].map;
+  const uint16_t numWords = _KeyMaps[mapIndex].numEntries*2;  // Number of 16-bit ints in the map
+  const uint16_t lookupCode = keyCode & (PS2_ALT_GR + PS2_SHIFT + 0xFF);  // Leave only required bits for checking against
 
-  // Convert entries count to number of ints
-  size = (_KeyMaps[index].size) << 1;
-  maparray = (uint16_t*)_KeyMaps[index].map;
-  // Leave only required bits for checking against
-  result = data & (PS2_ALT_GR + PS2_SHIFT + 0xFF);
-
-  // scan Lookup Table (array) jumping 2 integers at a time
-  for(idx = 0; idx < size; idx += 2) {
+  // Scan Lookup Table (array) jumping 2 integers (i.e. one entry) at a time
+  for (uint16_t idx = 0; idx < numWords; idx += 2) {
 #if defined(PS2_REQUIRES_PROGMEM)
-    if(result == pgm_read_word(maparray + idx)) {
-      // second integer is the replacement value
-      result = pgm_read_word(maparray + idx + 1);
+    if (lookupCode == pgm_read_word(mapArray + idx)) {
+      return pgm_read_word(mapArray + idx + 1);
+    }
 #else
-    if(result == *(maparray + idx)) {
-      // second integer is the replacement value
-      result = *(maparray + idx + 1);
+    if (lookupCode == *(mapArray + idx)) {
+      return *(mapArray + idx + 1);
+    }
 #endif
-      data &= ~0xFF;         // clear old bits retaining CTRL etc
-      data |= result;        // Make new code
-      break;
-    }
-  }
-
-  return data;
-}
-
-
-/*
-   Pass in 2 character string for the ISO 2 letter country code in use
-   For UK "UK" or "GB" are valid
-      "US" is built-in default
-
-     Returns 1 for done
-          or 0 for not found.
-*/
-uint8_t PS2KeyMap::selectMap(char* ISO) {
-  uint8_t outer, idx, end;
-
-  end = sizeof(_KeyMaps) / sizeof(PS2Advmap);
-  for(outer = 0; outer < end; outer++) {
-    for(idx = 0; idx < 3; idx++) {
-      if(_KeyMaps[outer].name[idx] != ISO[idx]) {
-        break;               // No match
-      }
-    }
-    if(idx == 3)           // done whole match
-      break;
-  }
-  if(outer < end) {        // found entry
-    _selected_map = outer;   // Copy over to selected
-    return 1;
   }
 
   return 0;
 }
 
 
-/*
-   Return selected map as a string pointer (2 chars and terminator)
-*/
-const char* PS2KeyMap::getMap() {
-  return (_KeyMaps[_selected_map].name);
+uint8_t PS2KeyMap::selectMap(char* countryCode) {
+  const uint8_t numMaps = sizeof(_KeyMaps) / sizeof(_KeyMaps[0]);
+
+  for (uint8_t i = 0; i < numMaps; i++) {
+    // Compare both the letters and the null terminator
+    if (memcmp(countryCode, &_KeyMaps[i], 3) == 0) {
+      mSelectedMap = i;
+      return 1;
+    }
+  }
+
+  return 0;
 }
 
 
-/* Pass in unsigned int returned from PS2KeyAdvanced
-     Returns 0 for error
-         uint16_t for valid code
-   Converts code to US-ASCII first (honouring SHIFT ONLY)
-   then if additional map defined scan and remap those keys
-*/
+const char* PS2KeyMap::getMap(void) {
+  return _KeyMaps[mSelectedMap].name;
+}
+
+
 uint16_t PS2KeyMap::remapKey(uint16_t code) {
   uint8_t temp;
 
@@ -283,7 +251,7 @@ uint16_t PS2KeyMap::remapKey(uint16_t code) {
   temp = code & 0xFF;
 
   // Sort standard ASCII control codes
-  if(temp >= PS2_KEY_DELETE && temp <= PS2_KEY_SPACE) {
+  if (temp >= PS2_KEY_DELETE && temp <= PS2_KEY_SPACE) {
     code &= ~(PS2_FUNCTION + 0xFF);     // convert to ASCII code not function
 #if defined(PS2_REQUIRES_PROGMEM)
     temp = pgm_read_byte(&_control_codes[temp - PS2_KEY_DELETE]);
@@ -294,16 +262,16 @@ uint16_t PS2KeyMap::remapKey(uint16_t code) {
   }
   else {
     // Remainder convert printable to US-ASCII
-    if(!(code & PS2_FUNCTION)) {
+    if (!(code & PS2_FUNCTION)) {
       // Some codes are straight return values We deal with ones that need work
       // When A-Z not shifted create lower case a - z
-      if(temp >= PS2_KEY_A && temp <= PS2_KEY_Z) {
+      if (temp >= PS2_KEY_A && temp <= PS2_KEY_Z) {
         // Deal with Caps Lock by inverting PS2_SHIFT and remove caps lock
-        if((code & PS2_CAPS)) {
+        if ((code & PS2_CAPS)) {
           code ^= (PS2_SHIFT + PS2_CAPS);
         }
 
-        if(!(code & PS2_SHIFT)) {
+        if (!(code & PS2_SHIFT)) {
           code |= 0x20;
         }
         else {
@@ -319,18 +287,19 @@ uint16_t PS2KeyMap::remapKey(uint16_t code) {
         }
         else {
           // Some keys ignore shift, the extra keys on numeric keypad
-          if((temp >= PS2_KEY_KP_DOT && temp <= PS2_KEY_KP_DIV)
-              || temp == PS2_KEY_KP_EQUAL  || temp == PS2_KEY_KP_COMMA) {
+          if ((temp >= PS2_KEY_KP_DOT && temp <= PS2_KEY_KP_DIV) ||
+              temp == PS2_KEY_KP_EQUAL || temp == PS2_KEY_KP_COMMA) {
             code &= ~PS2_SHIFT;
           }
+
           // Do default US-ASCII mapping of remainders excluding (CTRL, ALT, GUI)
-          code = (code & PS2_ALT_GR) + scan_map(code & ~PS2_ALT_GR, 0);
+          code = (code & PS2_ALT_GR) + scanMap(code & ~PS2_ALT_GR, 0);
         }
       }
 
       // Now do remap if necessary for all modifiers
-      if(code > 0 && _selected_map > 0) {
-        code = scan_map(code, _selected_map);
+      if(code > 0 && mSelectedMap > 0) {
+        code = scanMap(code, mSelectedMap);
       }
       else {
         // For USASCII ignore extra key in case

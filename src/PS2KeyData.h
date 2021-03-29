@@ -45,8 +45,8 @@
 #define PS2_SPACE      0x20
 
 
-/* Standard ASCII control characters array */
-/* in order of PS2_KEY_* values order is important */
+/* Standard ASCII control characters array
+   in order of PS2_KEY_* values. Order is important. */
 #if defined(PS2_REQUIRES_PROGMEM)
 const uint8_t PROGMEM _control_codes[] = {
 #else
@@ -376,15 +376,17 @@ const uint16_t _SpecialMap[][2] = {
 #endif
 
 // The following structures define the key maps available
-typedef struct  {
-                char        name[3];      // 2 Character ISO country code
-                uint8_t     size;           // Number of entries in map array
-                uint16_t    *map;           // Map array pointer
-                } PS2Advmap;
+typedef struct {
+  char name[3];  // 2 Character ISO country code
+  uint8_t numEntries;  // Number of entries/rows in map array
+  uint16_t *map;  // Map array pointer
+} PS2Advmap;
 
-// Actual map structure array (2 entries for GB and UK for same map
-// Because many people don't know ISO code for UK is GB)
-const PS2Advmap _KeyMaps[] = {
+// Actual map structure array (2 entries for GB and UK for same map,
+// because many people don't know ISO code for UK is GB).
+const PS2Advmap _KeyMaps[ ] = {
+// TODO: Can "sizeof(uint16_t)" (or even "2*sizeof(uint16_t)") be replaced by something that is easier to understand?
+// TODO: Can "(uint16_t*)_US_ASCII" be replaced by simply "_US_ASCII"?
                 { "US", sizeof(_US_ASCII) / (2 * sizeof(uint16_t)), (uint16_t*)_US_ASCII },
 #ifdef FRENCH
                 { "FR", sizeof(_FRmap) / (2 * sizeof(uint16_t)), (uint16_t*)_FRmap },

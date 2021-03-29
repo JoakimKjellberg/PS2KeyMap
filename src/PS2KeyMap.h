@@ -125,16 +125,16 @@
 #define PS2KeyMap_h
 
 #ifndef PS2KeyAdvanced_h
-#error PS2KeyAdvanced library missing
+  #error PS2KeyAdvanced library missing
 #endif
 
 // Uncomment any of following defines to include those mappings
 // or comment to exclude
-#define GERMAN
-#define FRENCH
-#define SPANISH
-#define ITALIAN
-//#define SPECIAL
+#define PS2_GERMAN
+#define PS2_FRENCH
+#define PS2_SPANISH
+#define PS2_ITALIAN
+//#define PS2_SPECIAL
 
 /* UTF-8 single byte LATIN encodings
    128 to 159 (0x80 to 0x9F) are control characters application generated
@@ -243,41 +243,44 @@
 #define PS2_y_DIAERESIS               255 // ÿ
 
 
-/* Public class definition */
 class PS2KeyMap {
  public:
   /**
-   * This constructor just sets the default key mapping to US. */
-  PS2KeyMap() : _selected_map(0) {}
-
-  /**
-   Pass in 2 character string for the ISO 2 letter country code in use
-      For UK "UK" or "GB" are valid
-      "US" is built-in default
-   Returns 1 for done or 0 for not found.
+   * This constructor just sets the default key mapping to US.
    */
-  uint8_t selectMap(char* ISO = (char*)"US");
+  PS2KeyMap() : mSelectedMap(0) {};
 
   /**
-   Return selected map as a string pointer (2 chars and terminator)    */
+   * Pass in 2 character string for the ISO 2 letter country code in use.
+   * - For UK "UK" or "GB" are valid.
+   * - "US" is built-in default.
+   * Returns 1 for done or 0 for not found.
+   */
+  uint8_t selectMap(char* countryCode = (char*)"US");
+
+  /**
+   * Returns the selected map as a char pointer (2 chars and terminator).
+   */
   const char* getMap();
 
   /**
-   Pass in unsigned int returned from PS2KeyAdvanced
-              Returns 0 for error
-                      uint16_t for valid code
+   * Remaps the key code returned from PS2KeyAdvanced to a UTF-8 number (1-255).
+   * Returns 0 for error.
+   *
+   * Parameter keyCode  The value returned by PS2KeyAdvanced::read().
    */
-  uint16_t remapKey(uint16_t code);
+  uint16_t remapKey(uint16_t keyCode);
 
   /**
-    Returns uint8_t version of remapKey ONLY for standard ASCII/UTF-8 codes
-    Invalid codes returned as 0
+   * Returns uint8_t version of remapKey ONLY for standard ASCII/UTF-8 codes.
+   * Invalid codes returned as 0.
    */
-  uint8_t remapKeyByte(uint16_t code);
+  uint8_t remapKeyByte(uint16_t keyCode);
 
  private:
-  uint16_t scan_map(uint16_t data, uint8_t index);
+  uint16_t scanMap(uint16_t data, uint8_t index);
 
-  uint8_t _selected_map;
+  uint8_t mSelectedMap;
 };
-#endif
+
+#endif  // PS2KeyMap_h

@@ -119,7 +119,7 @@ const uint16_t _UKmap[][2] = {
                 { PS2_KEY_EUROPE2, '\\' },
                 { PS2_SHIFT + PS2_KEY_EUROPE2, '|' },
                 };
-#ifdef FRENCH
+#ifdef PS2_FRENCH
 #if defined(PS2_REQUIRES_PROGMEM)
 const uint16_t PROGMEM _FRmap[][2] = {
 #else
@@ -211,7 +211,7 @@ const uint16_t _FRmap[][2] = {
                 { PS2_KEY_EUROPE2, '<' }
                 };
 #endif
-#ifdef GERMAN
+#ifdef PS2_GERMAN
 #if defined(PS2_REQUIRES_PROGMEM)
 const uint16_t PROGMEM _DEmap[][2] = {
 #else
@@ -274,7 +274,7 @@ const uint16_t _DEmap[][2] = {
                 { PS2_KEY_EUROPE2, '<' }
                 };
 #endif
-#ifdef SPANISH
+#ifdef PS2_SPANISH
 #if defined(PS2_REQUIRES_PROGMEM)
 const uint16_t PROGMEM _ESmap[][2] = {
 #else
@@ -321,7 +321,7 @@ const uint16_t _ESmap[][2] = {
                 { PS2_SHIFT + PS2_KEY_DIV, '+' }
                 };
 #endif
-#ifdef ITALIAN
+#ifdef PS2_ITALIAN
 #if defined(PS2_REQUIRES_PROGMEM)
 const uint16_t PROGMEM _ITmap[][2] = {
 #else
@@ -365,7 +365,7 @@ const uint16_t _ITmap[][2] = {
                 { PS2_SHIFT + PS2_KEY_DIV, '+' }
                 };
 #endif
-#ifdef SPECIAL
+#ifdef PS2_SPECIAL
 #if defined(PS2_REQUIRES_PROGMEM)
 const uint16_t PROGMEM _SpecialMap[][2] = {
 #else
@@ -388,19 +388,19 @@ const PS2Advmap _KeyMaps[ ] = {
 // TODO: Can "sizeof(uint16_t)" (or even "2*sizeof(uint16_t)") be replaced by something that is easier to understand?
 // TODO: Can "(uint16_t*)_US_ASCII" be replaced by simply "_US_ASCII"?
                 { "US", sizeof(_US_ASCII) / (2 * sizeof(uint16_t)), (uint16_t*)_US_ASCII },
-#ifdef FRENCH
+#ifdef PS2_FRENCH
                 { "FR", sizeof(_FRmap) / (2 * sizeof(uint16_t)), (uint16_t*)_FRmap },
 #endif
-#ifdef GERMAN
+#ifdef PS2_GERMAN
                 { "DE", sizeof(_DEmap) / (2 * sizeof(uint16_t)), (uint16_t*)_DEmap },
 #endif
-#ifdef SPANISH
+#ifdef PS2_SPANISH
                 { "ES", sizeof(_ESmap) / (2 * sizeof(uint16_t)), (uint16_t*)_ESmap },
 #endif
-#ifdef ITALIAN
+#ifdef PS2_ITALIAN
                 { "IT", sizeof(_ITmap) / (2 * sizeof(uint16_t)), (uint16_t*)_ITmap },
 #endif
-#ifdef SPECIAL
+#ifdef PS2_SPECIAL
                 { "--", sizeof(_SpecialMap) / (2 * sizeof(uint16_t)), (uint16_t*)_SpecialMap },
 #endif
                 { "UK", sizeof(_UKmap) / (2 * sizeof(uint16_t)), (uint16_t*)_UKmap },

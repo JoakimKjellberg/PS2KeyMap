@@ -211,16 +211,20 @@ uint16_t PS2KeyMap::scanMap(uint16_t keyCode, uint8_t mapIndex) {
   for (uint16_t idx = 0; idx < numWords; idx += 2) {
 #if defined(PS2_REQUIRES_PROGMEM)
     if (lookupCode == pgm_read_word(mapArray + idx)) {
-      return pgm_read_word(mapArray + idx + 1);
+      keyCode &= ~0xFF;  // clear old bits retaining CTRL etc
+      keyCode |= pgm_read_word(mapArray + idx + 1);  // Make new code
+      break;
     }
 #else
     if (lookupCode == *(mapArray + idx)) {
-      return *(mapArray + idx + 1);
+      keyCode &= ~0xFF;  // clear old bits retaining CTRL etc
+      keyCode |= *(mapArray + idx + 1);  // Make new code
+      break;
     }
 #endif
   }
 
-  return 0;
+  return keyCode;
 }
 
 
@@ -229,7 +233,7 @@ uint8_t PS2KeyMap::selectMap(char* countryCode) {
 
   for (uint8_t i = 0; i < numMaps; i++) {
     // Compare both the letters and the null terminator
-    if (memcmp(countryCode, &_KeyMaps[i], 3) == 0) {
+    if (memcmp(countryCode, &_KeyMaps[i].name, 3) == 0) {
       mSelectedMap = i;
       return 1;
     }
@@ -244,78 +248,76 @@ const char* PS2KeyMap::getMap(void) {
 }
 
 
-uint16_t PS2KeyMap::remapKey(uint16_t code) {
-  uint8_t temp;
+uint16_t PS2KeyMap::remapKey(uint16_t keyCode) {
+  uint16_t returnCode = 0;
+  const uint8_t bottomByte = keyCode & 0xFF;
 
-  // for bottom byte checks
-  temp = code & 0xFF;
-
-  // Sort standard ASCII control codes
-  if (temp >= PS2_KEY_DELETE && temp <= PS2_KEY_SPACE) {
-    code &= ~(PS2_FUNCTION + 0xFF);     // convert to ASCII code not function
+  if (bottomByte >= PS2_KEY_DELETE && bottomByte <= PS2_KEY_SPACE) {
+    // Conversion of standard ASCII control codes
 #if defined(PS2_REQUIRES_PROGMEM)
-    temp = pgm_read_byte(&_control_codes[temp - PS2_KEY_DELETE]);
+    uint8_t bottomByteAscii = pgm_read_byte(&_control_codes[bottomByte - PS2_KEY_DELETE]);
 #else
-    temp = _control_codes[temp - PS2_KEY_DELETE];
+    uint8_t bottomByteAscii = _control_codes[bottomByte - PS2_KEY_DELETE];
 #endif
-    code |= temp;
+    returnCode = keyCode & ~PS2_FUNCTION;  // Remove the FUNCTION-bit from the top byte
+    returnCode &= 0xFF00;  // Remove the bottom byte
+    returnCode |= bottomByteAscii;  // Replace the bottom byte with the corresponding ASCII code
+  }
+  else if (keyCode & PS2_FUNCTION) {
+    // Treat other function keys as non-printable
+    returnCode = 0;
   }
   else {
-    // Remainder convert printable to US-ASCII
-    if (!(code & PS2_FUNCTION)) {
-      // Some codes are straight return values We deal with ones that need work
-      // When A-Z not shifted create lower case a - z
-      if (temp >= PS2_KEY_A && temp <= PS2_KEY_Z) {
-        // Deal with Caps Lock by inverting PS2_SHIFT and remove caps lock
-        if ((code & PS2_CAPS)) {
-          code ^= (PS2_SHIFT + PS2_CAPS);
-        }
+    // Some codes are straight return values. We deal with ones that need work.
+    if (bottomByte >= PS2_KEY_A && bottomByte <= PS2_KEY_Z) {
+      returnCode = keyCode;
 
-        if (!(code & PS2_SHIFT)) {
-          code |= 0x20;
-        }
-        else {
-          // When shifted pass through code as received as the codes are A - Z
-          code &= ~PS2_SHIFT;
-        }
+      // Deal with Caps Lock by inverting PS2_SHIFT and remove caps lock
+      if (keyCode & PS2_CAPS) {
+        returnCode ^= (PS2_SHIFT + PS2_CAPS);
+      }
+
+      if (!(returnCode & PS2_SHIFT)) {
+        // When A-Z not Shifted, create lower case a-z.
+        returnCode |= 0x20;
       }
       else {
-        // Convert KeyPad 0-9 to number codes
-        if(temp >= PS2_KEY_KP0 && temp <= PS2_KEY_KP9) {
-          code |= 0x10;
-          code &= ~(PS2_SHIFT + PS2_ALT + PS2_ALT_GR + PS2_CTRL + PS2_GUI + PS2_CAPS);
-        }
-        else {
-          // Some keys ignore shift, the extra keys on numeric keypad
-          if ((temp >= PS2_KEY_KP_DOT && temp <= PS2_KEY_KP_DIV) ||
-              temp == PS2_KEY_KP_EQUAL || temp == PS2_KEY_KP_COMMA) {
-            code &= ~PS2_SHIFT;
-          }
-
-          // Do default US-ASCII mapping of remainders excluding (CTRL, ALT, GUI)
-          code = (code & PS2_ALT_GR) + scanMap(code & ~PS2_ALT_GR, 0);
-        }
+        // When Shifted, pass through code as received as the codes are A-Z
+        returnCode &= ~PS2_SHIFT;
       }
-
-      // Now do remap if necessary for all modifiers
-      if(code > 0 && mSelectedMap > 0) {
-        code = scanMap(code, mSelectedMap);
-      }
-      else {
-        // For USASCII ignore extra key in case
-        if((temp == PS2_KEY_EUROPE2)) {
-          code = 0;
-        }
-      }
-
-      code &= ~(PS2_SHIFT + PS2_ALT_GR);      // Now clear shift status
+    }
+    else if (bottomByte >= PS2_KEY_KP0 && bottomByte <= PS2_KEY_KP9) {
+      // Convert KeyPad 0-9 to number codes
+      returnCode = keyCode | 0x10;
+      returnCode &= ~(PS2_SHIFT + PS2_ALT + PS2_ALT_GR + PS2_CTRL + PS2_GUI + PS2_CAPS);
     }
     else {
-      code = 0;
+      returnCode = keyCode;
+
+      // Some keys ignore Shift, like the extra keys on numeric keypad
+      if ((bottomByte >= PS2_KEY_KP_DOT && bottomByte <= PS2_KEY_KP_DIV) ||
+          bottomByte == PS2_KEY_KP_EQUAL || bottomByte == PS2_KEY_KP_COMMA) {
+        returnCode &= ~PS2_SHIFT;
+      }
+
+      // Do default US-ASCII mapping of remainders excluding (CTRL, ALT, GUI)
+      const uint8_t mapIndexUS = 0;
+      returnCode = (returnCode & PS2_ALT_GR) + scanMap(returnCode & ~PS2_ALT_GR, mapIndexUS);
     }
+
+    // Now do remap if necessary for all modifiers
+    if (returnCode > 0 && mSelectedMap > 0) {
+      returnCode = scanMap(returnCode, mSelectedMap);
+    }
+    else if (bottomByte == PS2_KEY_EUROPE2) {
+      // For US-ASCII ignore extra key in case
+      returnCode = 0;
+    }
+
+    returnCode &= ~(PS2_SHIFT + PS2_ALT_GR);  // Now clear Shift and AltGr status
   }
 
-  return code;
+  return returnCode;
 }
 
 

@@ -134,6 +134,7 @@
 #define PS2_FRENCH
 #define PS2_SPANISH
 #define PS2_ITALIAN
+#define PS2_SWEDISH
 //#define PS2_SPECIAL
 
 /* UTF-8 single byte LATIN encodings
@@ -252,7 +253,7 @@ class PS2KeyMap {
 
   /**
    * Pass in 2 character string for the ISO 2 letter country code in use.
-   * - For UK "UK" or "GB" are valid.
+   * - For UK, "UK" or "GB" are valid.
    * - "US" is built-in default.
    * Returns 1 for done or 0 for not found.
    */
@@ -265,20 +266,20 @@ class PS2KeyMap {
 
   /**
    * Remaps the key code returned from PS2KeyAdvanced to a UTF-8 number (1-255).
-   * Returns 0 for error.
+   * Leaves the status bits (the top byte) unchanged. Invalid codes returned as 0.
    *
    * Parameter keyCode  The value returned by PS2KeyAdvanced::read().
    */
-  uint16_t remapKey(uint16_t keyCode);
+  uint16_t remapKey(const uint16_t keyCode);
 
   /**
    * Returns uint8_t version of remapKey ONLY for standard ASCII/UTF-8 codes.
    * Invalid codes returned as 0.
    */
-  uint8_t remapKeyByte(uint16_t keyCode);
+  uint8_t remapKeyByte(const uint16_t keyCode);
 
  private:
-  uint16_t scanMap(uint16_t data, uint8_t index);
+  uint8_t scanMap(const uint16_t data, const uint8_t index);
 
   uint8_t mSelectedMap;
 };

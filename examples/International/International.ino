@@ -157,6 +157,10 @@ void loop() {
         case 'U':
                 found = keymap.selectMap((char*)"US");
                 break;
+        case 's':
+        case 'S':
+                found = keymap.selectMap((char*)"SE");
+                break;
       }
 
       if (found == 1) {

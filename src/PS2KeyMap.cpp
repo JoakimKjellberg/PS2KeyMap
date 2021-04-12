@@ -183,48 +183,37 @@
 #include "PS2KeyData.h"
 
 
-/* Searches a key map for the given key combination and returns the
-   corresponding character, or 0 if not found.
-
-   Checks using default mask of keycode plus ALT_GR and SHIFT.
-   To match other modifiers, you need to modify this function and set the
-   mask to a combination of:
-   - PS2_CTRL  match either Control key as well
-   - PS2_ALT   match left ALT as well
-   - PS2_GUI   match either GUI key as well
-
-   Assumes map table has 2 dimensions of type prog_uint16_t (in Flash memory)
-   i.e. an array like test[][2], where:
-   - First entry  (test[x][0]) is item to match
-   - Second entry (test[x][1]) is item to return
-
-   Parameters are
-        keyCode   unsigned int 16 from PS2KeyAdvanced::read().
-        mapIndex  index of mapping table to use.
-*/
-uint16_t PS2KeyMap::scanMap(uint16_t keyCode, uint8_t mapIndex) {
+/**
+ * Searches a key map for the given key combination and returns the
+ * corresponding character, or 0 if not found.
+ *
+ * Assumes map table has 2 dimensions of type prog_uint16_t (in Flash memory)
+ * i.e. an array like test[][2], where:
+ * - First entry  (test[x][0]) is item to match
+ * - Second entry (test[x][1]) is item to return
+ *
+ * Parameters are
+ *      keyCode   unsigned int 16 from PS2KeyAdvanced::read().
+ *      mapIndex  index of mapping table to use.
+ */
+uint8_t PS2KeyMap::scanMap(const uint16_t keyCode, const uint8_t mapIndex) {
   const uint16_t *mapArray = _KeyMaps[mapIndex].map;
   const uint16_t numWords = _KeyMaps[mapIndex].numEntries*2;  // Number of 16-bit ints in the map
-  const uint16_t lookupCode = keyCode & (PS2_ALT_GR + PS2_SHIFT + 0xFF);  // Leave only required bits for checking against
 
   // Scan Lookup Table (array) jumping 2 integers (i.e. one entry) at a time
   for (uint16_t idx = 0; idx < numWords; idx += 2) {
 #if defined(PS2_REQUIRES_PROGMEM)
-    if (lookupCode == pgm_read_word(mapArray + idx)) {
-      keyCode &= ~0xFF;  // clear old bits retaining CTRL etc
-      keyCode |= pgm_read_word(mapArray + idx + 1);  // Make new code
-      break;
+    if (keyCode == pgm_read_word(mapArray + idx)) {
+      return (pgm_read_word(mapArray + idx + 1) & 0xFF);
     }
 #else
-    if (lookupCode == *(mapArray + idx)) {
-      keyCode &= ~0xFF;  // clear old bits retaining CTRL etc
-      keyCode |= *(mapArray + idx + 1);  // Make new code
-      break;
+    if (keyCode == *(mapArray + idx)) {
+      return (*(mapArray + idx + 1) & 0xFF);
     }
 #endif
   }
 
-  return keyCode;
+  return 0;
 }
 
 
@@ -243,14 +232,15 @@ uint8_t PS2KeyMap::selectMap(char* countryCode) {
 }
 
 
-const char* PS2KeyMap::getMap(void) {
+const char* PS2KeyMap::getMap() {
   return _KeyMaps[mSelectedMap].name;
 }
 
 
-uint16_t PS2KeyMap::remapKey(uint16_t keyCode) {
-  uint16_t returnCode = 0;
+uint16_t PS2KeyMap::remapKey(const uint16_t keyCode) {
+  const uint8_t mapIndexUS = 0;
   const uint8_t bottomByte = keyCode & 0xFF;
+  uint16_t returnCode = 0;
 
   if (bottomByte >= PS2_KEY_DELETE && bottomByte <= PS2_KEY_SPACE) {
     // Conversion of standard ASCII control codes
@@ -263,77 +253,55 @@ uint16_t PS2KeyMap::remapKey(uint16_t keyCode) {
     returnCode &= 0xFF00;  // Remove the bottom byte
     returnCode |= bottomByteAscii;  // Replace the bottom byte with the corresponding ASCII code
   }
-  else if (keyCode & PS2_FUNCTION) {
-    // Treat other function keys as non-printable
+  else if (keyCode & (PS2_FUNCTION | PS2_BREAK)) {
+    // Treat other function keys (and break/release) as non-printable
     returnCode = 0;
   }
   else {
-    // Some codes are straight return values. We deal with ones that need work.
-    if (bottomByte >= PS2_KEY_A && bottomByte <= PS2_KEY_Z) {
-      returnCode = keyCode;
+    uint16_t shitKeyBitmask = keyCode & PS2_SHIFT;
+    uint8_t remappedChar = 0;
 
-      // Deal with Caps Lock by inverting PS2_SHIFT and remove caps lock
-      if (keyCode & PS2_CAPS) {
-        returnCode ^= (PS2_SHIFT + PS2_CAPS);
+    if ((keyCode & PS2_CAPS) && bottomByte >= PS2_KEY_A && bottomByte <= PS2_KEY_Z) {
+      // For keys A-Z, deal with Caps Lock by inverting the bitmask for Shift
+      shitKeyBitmask ^= PS2_SHIFT;
+    }
+
+    if (mSelectedMap != mapIndexUS) {
+      remappedChar = scanMap(keyCode & (shitKeyBitmask + PS2_ALT_GR + 0x00FF), mSelectedMap);
+    }
+
+    if (remappedChar == 0) {
+      // No value found in the country-specific map, check the US map instead
+      remappedChar = scanMap(keyCode & (shitKeyBitmask + PS2_ALT_GR + 0x00FF), mapIndexUS);
+    }
+
+    if (remappedChar == 0) {
+      // No value found in any map, try some standard replacements instead
+      if (bottomByte >= PS2_KEY_A && bottomByte <= PS2_KEY_Z) {
+        if (shitKeyBitmask) {
+          // Upper case
+          remappedChar = bottomByte;
+        } else {
+          // Lower case
+          remappedChar = bottomByte + 0x20;
+        }
       }
-
-      if (!(returnCode & PS2_SHIFT)) {
-        // When A-Z not Shifted, create lower case a-z.
-        returnCode |= 0x20;
+      else if (bottomByte >= PS2_KEY_KP0 && bottomByte <= PS2_KEY_KP9) {
+        // Convert KeyPad 0-9 to number codes
+        remappedChar = bottomByte + 0x10;
       }
       else {
-        // When Shifted, pass through code as received as the codes are A-Z
-        returnCode &= ~PS2_SHIFT;
+        remappedChar = bottomByte;
       }
     }
-    else if (bottomByte >= PS2_KEY_KP0 && bottomByte <= PS2_KEY_KP9) {
-      // Convert KeyPad 0-9 to number codes
-      returnCode = keyCode | 0x10;
-      returnCode &= ~(PS2_SHIFT + PS2_ALT + PS2_ALT_GR + PS2_CTRL + PS2_GUI + PS2_CAPS);
-    }
-    else {
-      returnCode = keyCode;
 
-      // Some keys ignore Shift, like the extra keys on numeric keypad
-      if ((bottomByte >= PS2_KEY_KP_DOT && bottomByte <= PS2_KEY_KP_DIV) ||
-          bottomByte == PS2_KEY_KP_EQUAL || bottomByte == PS2_KEY_KP_COMMA) {
-        returnCode &= ~PS2_SHIFT;
-      }
-
-      // Do default US-ASCII mapping of remainders excluding (CTRL, ALT, GUI)
-      const uint8_t mapIndexUS = 0;
-      returnCode = (returnCode & PS2_ALT_GR) + scanMap(returnCode & ~PS2_ALT_GR, mapIndexUS);
-    }
-
-    // Now do remap if necessary for all modifiers
-    if (returnCode > 0 && mSelectedMap > 0) {
-      returnCode = scanMap(returnCode, mSelectedMap);
-    }
-    else if (bottomByte == PS2_KEY_EUROPE2) {
-      // For US-ASCII ignore extra key in case
-      returnCode = 0;
-    }
-
-    returnCode &= ~(PS2_SHIFT + PS2_ALT_GR);  // Now clear Shift and AltGr status
+    returnCode = (keyCode & 0xFF00) | ((uint16_t)remappedChar & 0x00FF);
   }
 
   return returnCode;
 }
 
 
-/*
-   Returns uint8_t version of remapKey ONLY for standard ASCII/UTF-8 codes
-   Invalid codes returned as 0
-   Also any key with BREAK condition are returned as 0
-*/
-uint8_t PS2KeyMap::remapKeyByte(uint16_t code) {
-  uint16_t data;
-
-  // Invalid codes returned as 0
-  if(code & (PS2_FUNCTION + PS2_BREAK)) {
-    return 0;
-  }
-
-  data = remapKey(code);
-  return (uint8_t)(data & 0xFF);
+uint8_t PS2KeyMap::remapKeyByte(const uint16_t code) {
+  return (remapKey(code) & 0xFF);
 }

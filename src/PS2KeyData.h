@@ -119,6 +119,7 @@ const uint16_t _UKmap[][2] = {
                 { PS2_KEY_EUROPE2, '\\' },
                 { PS2_SHIFT + PS2_KEY_EUROPE2, '|' },
                 };
+
 #ifdef PS2_FRENCH
 #if defined(PS2_REQUIRES_PROGMEM)
 const uint16_t PROGMEM _FRmap[][2] = {
@@ -211,6 +212,7 @@ const uint16_t _FRmap[][2] = {
                 { PS2_KEY_EUROPE2, '<' }
                 };
 #endif
+
 #ifdef PS2_GERMAN
 #if defined(PS2_REQUIRES_PROGMEM)
 const uint16_t PROGMEM _DEmap[][2] = {
@@ -274,6 +276,7 @@ const uint16_t _DEmap[][2] = {
                 { PS2_KEY_EUROPE2, '<' }
                 };
 #endif
+
 #ifdef PS2_SPANISH
 #if defined(PS2_REQUIRES_PROGMEM)
 const uint16_t PROGMEM _ESmap[][2] = {
@@ -321,6 +324,7 @@ const uint16_t _ESmap[][2] = {
                 { PS2_SHIFT + PS2_KEY_DIV, '+' }
                 };
 #endif
+
 #ifdef PS2_ITALIAN
 #if defined(PS2_REQUIRES_PROGMEM)
 const uint16_t PROGMEM _ITmap[][2] = {
@@ -365,6 +369,24 @@ const uint16_t _ITmap[][2] = {
                 { PS2_SHIFT + PS2_KEY_DIV, '+' }
                 };
 #endif
+
+#ifdef PS2_SWEDISH
+#if defined(PS2_REQUIRES_PROGMEM)
+const uint16_t PROGMEM _SwedishMap[][2] = {
+#else
+const uint16_t _SwedishMap[][2] = {
+#endif
+                { PS2_SHIFT + PS2_KEY_2, '"' },
+                { PS2_ALT_GR + PS2_KEY_2, '@' },
+                { PS2_KEY_OPEN_SQ, PS2_a_RING_ABOVE },
+                { PS2_KEY_APOS, PS2_a_DIAERESIS },
+                { PS2_KEY_SEMI, PS2_o_DIAERESIS },
+                { PS2_SHIFT + PS2_KEY_OPEN_SQ, PS2_A_RING_ABOVE },
+                { PS2_SHIFT + PS2_KEY_SEMI, PS2_O_DIAERESIS },
+                { PS2_SHIFT + PS2_KEY_APOS, PS2_A_DIAERESIS },
+                };
+#endif
+
 #ifdef PS2_SPECIAL
 #if defined(PS2_REQUIRES_PROGMEM)
 const uint16_t PROGMEM _SpecialMap[][2] = {
@@ -399,6 +421,9 @@ const PS2Advmap _KeyMaps[ ] = {
 #endif
 #ifdef PS2_ITALIAN
                 { "IT", sizeof(_ITmap) / (2 * sizeof(uint16_t)), (uint16_t*)_ITmap },
+#endif
+#ifdef PS2_SWEDISH
+                { "SE", sizeof(_SwedishMap) / (2 * sizeof(uint16_t)), (uint16_t*)_SwedishMap },
 #endif
 #ifdef PS2_SPECIAL
                 { "--", sizeof(_SpecialMap) / (2 * sizeof(uint16_t)), (uint16_t*)_SpecialMap },

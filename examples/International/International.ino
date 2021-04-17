@@ -99,6 +99,7 @@ void setup() {
   Serial.println(" U for US     G for GB/UK");
   Serial.println(" D for DE     F for FR");
   Serial.println(" I for IT     E for ES");
+  Serial.println(" S for SE     X for SPECIAL");
   Serial.println(" All keys on keyboard echoed here");
   // Start keyboard setup while outputting
   keyboard.begin(DATAPIN, IRQPIN);
@@ -161,6 +162,10 @@ void loop() {
         case 'S':
                 found = keymap.selectMap((char*)"SE");
                 break;
+        case 'x':
+        case 'X':
+                found = keymap.selectMap((char*)"--");
+                break;
       }
 
       if (found == 1) {
@@ -168,7 +173,7 @@ void loop() {
         Serial.println(keymap.getMap());
       }
       else if (found == 0) {
-        Serial.println("Keyboard map not found!");
+        Serial.println("Keyboard map not defined!");
       }
     }
     else {

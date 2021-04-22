@@ -119,7 +119,7 @@ void loop() {
 
     code = keymap.remapKey(code);
     if (code > 0) {
-      if ((code & 0xFF)) {
+      if (code & 0xFF) {
         Serial.print(" mapped ");
         Serial.print(code, HEX);
         Serial.print(" - Status Bits ");
@@ -133,7 +133,7 @@ void loop() {
 
       // process special commands
       found = 2;
-      switch (code) {
+      switch (code & 0xFF) {
         case 'D':
         case 'd':
                 found = keymap.selectMap((char*)"DE");
@@ -154,16 +154,16 @@ void loop() {
         case 'g':
                 found = keymap.selectMap((char*)"UK");
                 break;
-        case 'u':
         case 'U':
+        case 'u':
                 found = keymap.selectMap((char*)"US");
                 break;
-        case 's':
         case 'S':
+        case 's':
                 found = keymap.selectMap((char*)"SE");
                 break;
-        case 'x':
         case 'X':
+        case 'x':
                 found = keymap.selectMap((char*)"--");
                 break;
       }

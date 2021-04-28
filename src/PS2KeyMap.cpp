@@ -253,8 +253,9 @@ uint16_t PS2KeyMap::remapKey(const uint16_t keyCode) {
     returnCode &= 0xFF00;  // Remove the bottom byte
     returnCode |= bottomByteAscii;  // Replace the bottom byte with the corresponding ASCII code
   }
-  else if ((keyCode & PS2_FUNCTION) || (keyCode & PS2_BREAK)) {
-    // Treat other function keys (and break/release) as non-printable
+  else if ((keyCode & PS2_FUNCTION) || (keyCode & PS2_BREAK) || bottomByte == 0xFA) {
+    // Treat other function keys (and break/release) as non-printable.
+    // The lock keys (num lock, scroll lock, caps lock) are received as 0xFA, don't print them.
     returnCode = 0;
   }
   else {

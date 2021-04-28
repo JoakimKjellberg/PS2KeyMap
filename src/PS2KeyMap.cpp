@@ -291,7 +291,9 @@ uint16_t PS2KeyMap::remapKey(const uint16_t keyCode) {
         // Convert KeyPad 0-9 to number codes
         remappedChar = bottomByte + 0x10;
       }
-      else {
+      else if ((keyCode & (PS2_CTRL + PS2_ALT + PS2_ALT_GR)) == 0) {
+        // Use the default values from PS2KeyAdvanced.h (like 0-9 and A-Z), but only if
+        // no modifier keys are pressed.
         remappedChar = bottomByte;
       }
     }

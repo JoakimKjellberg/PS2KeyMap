@@ -259,33 +259,23 @@ uint16_t PS2KeyMap::remapKey(const uint16_t keyCode) {
     returnCode = 0;
   }
   else {
-    uint16_t shitKeyBitmask = keyCode & PS2_SHIFT;
     uint8_t remappedChar = 0;
 
-    if ((keyCode & PS2_CAPS) && bottomByte >= PS2_KEY_A && bottomByte <= PS2_KEY_Z) {
-      // For keys A-Z, deal with Caps Lock by inverting the bitmask for Shift
-      shitKeyBitmask ^= PS2_SHIFT;
-    }
-
     if (mSelectedMap != mapIndexUS) {
-      remappedChar = scanMap(keyCode & (shitKeyBitmask + PS2_ALT_GR + 0x00FF), mSelectedMap);
+      remappedChar = scanMap(keyCode & (PS2_SHIFT + PS2_ALT_GR + 0x00FF), mSelectedMap);
     }
 
     if (remappedChar == 0) {
       // No value found in the country-specific map, check the US map instead
-      remappedChar = scanMap(keyCode & (shitKeyBitmask + PS2_ALT_GR + 0x00FF), mapIndexUS);
+      remappedChar = scanMap(keyCode & (PS2_SHIFT + PS2_ALT_GR + 0x00FF), mapIndexUS);
     }
 
-    if (remappedChar == 0) {
-      // No value found in any map, try some standard replacements instead
-      if (bottomByte >= PS2_KEY_A && bottomByte <= PS2_KEY_Z) {
-        if (shitKeyBitmask) {
-          // Upper case
-          remappedChar = bottomByte;
-        } else {
-          // Lower case
-          remappedChar = bottomByte + 0x20;
-        }
+    if (remappedChar == 0 && (keyCode & (PS2_CTRL + PS2_ALT + PS2_ALT_GR)) == 0) {
+      // No value found in any map, try some standard replacements instead.
+      // But only if no modifier keys (other than Shift) are pressed.
+      if ((keyCode & PS2_SHIFT) == 0 && bottomByte >= PS2_KEY_A && bottomByte <= PS2_KEY_Z) {
+        // Lower case a-z
+        remappedChar = bottomByte + 0x20;
       }
       else if (bottomByte >= PS2_KEY_KP0 && bottomByte <= PS2_KEY_KP9) {
         // Convert KeyPad 0-9 to number codes
@@ -298,7 +288,19 @@ uint16_t PS2KeyMap::remapKey(const uint16_t keyCode) {
       }
     }
 
-    returnCode = (keyCode & 0xFF00) | ((uint16_t)remappedChar & 0x00FF);
+    if ((keyCode & PS2_CAPS) &&
+        ((remappedChar >= 0x41 && remappedChar <= 0x5A) ||  // A-Z
+        (remappedChar >= 0x61 && remappedChar <= 0x7A) ||  // a-z
+        (remappedChar >= 0xC0 && remappedChar <= 0xFE &&  // À-þ...
+        remappedChar != 0xF7 && remappedChar != 0xD7))) {  // ...but not × and ÷
+      // When Caps Lock is active, change the case for letters like a-z, à, ö, ñ to
+      // A-Z, À, Ö, Ñ - and vice versa.
+      remappedChar ^= 0x20;
+    }
+
+    if (remappedChar > 0) {
+      returnCode = (keyCode & 0xFF00) | ((uint16_t)remappedChar & 0x00FF);
+    }
   }
 
   return returnCode;

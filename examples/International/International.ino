@@ -76,8 +76,10 @@
 */
 
 #include <PS2KeyAdvanced.h>
-// Include all mappings
 #include <PS2KeyMap.h>
+
+// Include all key maps
+#include <PS2KeyMaps/Swedish.h>
 
 /* Keyboard constants  Change to suit your Arduino
    define pins used for data and clock from keyboard */
@@ -88,7 +90,7 @@ PS2KeyAdvanced keyboard;
 PS2KeyMap keymap;
 
 uint16_t code;
-uint8_t found;
+bool mapChanged;
 
 
 void setup() {
@@ -114,17 +116,17 @@ void loop() {
   code = keyboard.available();
   if (code > 0) {
     code = keyboard.read();
-    Serial.print("Value ");
+    Serial.print("Value 0x");
     Serial.print(code, HEX);
 
     code = keymap.remapKey(code);
     if (code > 0) {
       if (code & 0xFF) {
-        Serial.print(" mapped ");
+        Serial.print(" mapped 0x");
         Serial.print(code, HEX);
-        Serial.print(" - Status Bits ");
+        Serial.print(" - Status Bits 0x");
         Serial.print(code >> 8, HEX);
-        Serial.print("  Code ");
+        Serial.print("  Code 0x");
         Serial.print(code & 0xFF, HEX);
         Serial.print("  (");
         Serial.write(code & 0xFF);
@@ -132,48 +134,53 @@ void loop() {
       }
 
       // process special commands
-      found = 2;
+      mapChanged = false;
       switch (code & 0xFF) {
         case 'D':
         case 'd':
-                found = keymap.selectMap((char*)"DE");
+                //keymap.selectMap(&keyMap_German);
+                //mapChanged = true;
                 break;
         case 'F':
         case 'f':
-                found = keymap.selectMap((char*)"FR");
+                //keymap.selectMap(&keyMap_French);
+                //mapChanged = true;
                 break;
         case 'E':
         case 'e':
-                found = keymap.selectMap((char*)"ES");
+                //keymap.selectMap(&keyMap_Spanish);
+                //mapChanged = true;
                 break;
         case 'I':
         case 'i':
-                found = keymap.selectMap((char*)"IT");
+                //keymap.selectMap(&keyMap_Italian);
+                //mapChanged = true;
                 break;
         case 'G':
         case 'g':
-                found = keymap.selectMap((char*)"UK");
+                //keymap.selectMap(&keyMap_GreatBritain);
+                //mapChanged = true;
                 break;
         case 'U':
         case 'u':
-                found = keymap.selectMap((char*)"US");
+                keymap.selectMap(NULL);  // NULL -> United States
+                mapChanged = true;
                 break;
         case 'S':
         case 's':
-                found = keymap.selectMap((char*)"SE");
+                keymap.selectMap(&keyMap_Swedish);
+                mapChanged = true;
                 break;
         case 'X':
         case 'x':
-                found = keymap.selectMap((char*)"--");
+                //keymap.selectMap(&keyMap_MyCustomMap);
+                //mapChanged = true;
                 break;
       }
 
-      if (found == 1) {
+      if (mapChanged) {
         Serial.print("Keyboard set to ");
-        Serial.println(keymap.getMap());
-      }
-      else if (found == 0) {
-        Serial.println("Keyboard map not defined!");
+        Serial.println(keymap.getMap()->countryCode);
       }
     }
     else {

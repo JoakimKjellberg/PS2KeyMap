@@ -128,15 +128,6 @@
   #error PS2KeyAdvanced library missing
 #endif
 
-// Uncomment any of following defines to include those mappings
-// or comment to exclude
-#define PS2_GERMAN
-#define PS2_FRENCH
-#define PS2_SPANISH
-#define PS2_ITALIAN
-#define PS2_SWEDISH
-//#define PS2_SPECIAL
-
 /* UTF-8 single byte LATIN encodings
    128 to 159 (0x80 to 0x9F) are control characters application generated
    160 to 255 (0xA0 to 0XFF) are used depending on keymap tables
@@ -244,25 +235,34 @@
 #define PS2_y_DIAERESIS               255 // (0xFF) ÿ
 
 
+// Meta data of a key map.
+typedef struct {
+  const char countryCode[3];  // ISO country code (2 chars and null).
+  uint8_t numRows;  // Number of rows in the map array.
+  const uint16_t* map;  // Map array pointer.
+} PS2KeyMap_t;
+
+
 class PS2KeyMap {
  public:
   /**
-   * This constructor just sets the default key mapping to US.
+   * This constructor sets the default key mapping to US.
    */
-  PS2KeyMap() : mSelectedMap(0) {};
+  PS2KeyMap();
 
   /**
-   * Pass in 2 character string for the ISO 2 letter country code in use.
-   * - For UK, "UK" or "GB" are valid.
-   * - "US" is built-in default.
-   * Returns 1 for done or 0 for not found.
+   * Sets the map pointer to the given key map. If NULL is passed, the US key map
+   * is selected.
+   *
+   * A map can be included by using #include <PS2KeyMaps/Swedish.h>, which defines
+   * the variable keyMap_Swedish.
    */
-  uint8_t selectMap(char* countryCode = (char*)"US");
+  void setMap(PS2KeyMap_t* keyMap);
 
   /**
    * Returns the selected map as a char pointer (2 chars and terminator).
    */
-  const char* getMap();
+  const PS2KeyMap_t* getMap();
 
   /**
    * Remaps the key code returned from PS2KeyAdvanced to a UTF-8 number (1-255).
@@ -279,9 +279,9 @@ class PS2KeyMap {
   uint8_t remapKeyByte(const uint16_t keyCode);
 
  private:
-  uint8_t scanMap(const uint16_t data, const uint8_t index);
+  uint8_t scanMap(const uint16_t keyCode, const PS2KeyMap_t* keyMap);
 
-  uint8_t mSelectedMap;
+  PS2KeyMap_t* mSelectedMap;
 };
 
 #endif  // PS2KeyMap_h

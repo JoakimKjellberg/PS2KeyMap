@@ -183,6 +183,11 @@
 #include "PS2KeyData.h"
 
 
+PS2KeyMap::PS2KeyMap() {
+  setMap(NULL);
+};
+
+
 /**
  * Searches a key map for the given key combination and returns the
  * corresponding character, or 0 if not found.
@@ -196,9 +201,9 @@
  *      keyCode   unsigned int 16 from PS2KeyAdvanced::read().
  *      mapIndex  index of mapping table to use.
  */
-uint8_t PS2KeyMap::scanMap(const uint16_t keyCode, const uint8_t mapIndex) {
-  const uint16_t *mapArray = _KeyMaps[mapIndex].map;
-  const uint16_t numWords = _KeyMaps[mapIndex].numEntries*2;  // Number of 16-bit ints in the map
+uint8_t PS2KeyMap::scanMap(const uint16_t keyCode, const PS2KeyMap_t* keyMap) {
+  const uint16_t* mapArray = keyMap->map;
+  const uint16_t numWords = keyMap->numRows*2;  // Number of 16-bit ints in the map
 
   // Scan Lookup Table (array) jumping 2 integers (i.e. one entry) at a time
   for (uint16_t idx = 0; idx < numWords; idx += 2) {
@@ -217,23 +222,18 @@ uint8_t PS2KeyMap::scanMap(const uint16_t keyCode, const uint8_t mapIndex) {
 }
 
 
-uint8_t PS2KeyMap::selectMap(char* countryCode) {
-  const uint8_t numMaps = sizeof(_KeyMaps) / sizeof(_KeyMaps[0]);
-
-  for (uint8_t i = 0; i < numMaps; i++) {
-    // Compare both the letters and the null terminator
-    if (memcmp(countryCode, &_KeyMaps[i].name, 3) == 0) {
-      mSelectedMap = i;
-      return 1;
-    }
+void PS2KeyMap::setMap(PS2KeyMap_t* keyMap) {
+  if (keyMap == NULL) {
+    mSelectedMap = &keyMap_UnitedStates;
   }
-
-  return 0;
+  else {
+    mSelectedMap = keyMap;
+  }
 }
 
 
-const char* PS2KeyMap::getMap() {
-  return _KeyMaps[mSelectedMap].name;
+const PS2KeyMap_t* PS2KeyMap::getMap() {
+  return mSelectedMap;
 }
 
 
@@ -261,13 +261,13 @@ uint16_t PS2KeyMap::remapKey(const uint16_t keyCode) {
   else {
     uint8_t remappedChar = 0;
 
-    if (mSelectedMap != mapIndexUS) {
+    if (mSelectedMap != &keyMap_UnitedStates) {
       remappedChar = scanMap(keyCode & (PS2_SHIFT + PS2_ALT_GR + 0x00FF), mSelectedMap);
     }
 
     if (remappedChar == 0) {
       // No value found in the country-specific map, check the US map instead
-      remappedChar = scanMap(keyCode & (PS2_SHIFT + PS2_ALT_GR + 0x00FF), mapIndexUS);
+      remappedChar = scanMap(keyCode & (PS2_SHIFT + PS2_ALT_GR + 0x00FF), &keyMap_UnitedStates);
     }
 
     if (remappedChar == 0 && (keyCode & (PS2_CTRL + PS2_ALT + PS2_ALT_GR)) == 0) {

@@ -7,6 +7,7 @@
 	January 2020 - Paul Carpenter - extend library properties for V2.2 of Arduino Library Management
     March 2020 - Paul Carpenter - add Spanish and Italian Mappings
     April 2020 - Paul Carpenter - Correct _KeyMaps definition error in last version
+    May 2021 - Joakim Kjellberg - add Swedish mapping
 
   PRIVATE to library data and key mapping tables
 
@@ -365,6 +366,66 @@ const uint16_t _ITmap[][ 2 ] = {
                 { PS2_SHIFT + PS2_KEY_DIV, '+' }
                 };
 #endif
+#ifdef SWEDISH
+#if defined(PS2_REQUIRES_PROGMEM)
+const uint16_t PROGMEM _SEmap[][ 2 ] = {
+#else
+const uint16_t _SEmap[][ 2 ] = {
+#endif
+                // Top row, without modifier keys
+                { '`', PS2_SECTION_SIGN },  // §
+                { '-', '+' },
+                { '=', PS2_ACUTE_ACCENT },  // ´
+                // Top row, with Sihft key
+                { PS2_SHIFT + '~', PS2_FRACTION_ONE_HALF },  // ½
+                { PS2_SHIFT + '@', '"' },
+                { PS2_SHIFT + '$', PS2_CURRENCY_SIGN },  // ¤
+                { PS2_SHIFT + '^', '&' },
+                { PS2_SHIFT + '&', '/' },
+                { PS2_SHIFT + '*', '(' },
+                { PS2_SHIFT + '(', ')' },
+                { PS2_SHIFT + ')', '=' },
+                { PS2_SHIFT + '_', '?' },
+                { PS2_SHIFT + '+', '`' },
+                // Top row, with Alt Gr key
+                { PS2_ALT_GR + '2', '@' },
+                { PS2_ALT_GR + '3', PS2_POUND_SIGN },  // £
+                { PS2_ALT_GR + '4', '$' },
+                { PS2_ALT_GR + '7', '{' },
+                { PS2_ALT_GR + '8', '[' },
+                { PS2_ALT_GR + '9', ']' },
+                { PS2_ALT_GR + '0', '}' },
+                { PS2_ALT_GR + '-', '\\' },
+                // Second row, without modifier keys
+                { '[', PS2_a_RING_ABOVE },  // å
+                { ']', PS2_DIAERESIS },  // ¨
+                // Second row, with Shift key
+                { PS2_SHIFT + '{', PS2_A_RING_ABOVE },  // Å
+                { PS2_SHIFT + '}', '^' },
+                // Second row, with Alt Gr key
+                { PS2_ALT_GR + ']', '~' },
+                // Third row, without modifier keys
+                { ';', PS2_o_DIAERESIS },  // ö
+                { '\'', PS2_a_DIAERESIS }, // ä
+                { '\\', '\'' },
+                // Third row, with Shift key
+                { PS2_SHIFT + ':', PS2_O_DIAERESIS },  // Ä
+                { PS2_SHIFT + '"', PS2_A_DIAERESIS },  // Ö
+                { PS2_SHIFT + '|', '*' },
+                // Fourth row, without modifier keys
+                { PS2_KEY_EUROPE2, '<' },
+                { '/', '-' },
+                // Fourth row, with Shift key
+                { PS2_SHIFT + PS2_KEY_EUROPE2, '>' },
+                { PS2_SHIFT + '<', ';' },
+                { PS2_SHIFT + '>', ':' },
+                { PS2_SHIFT + '?', '_' },
+                // Fourth row, with Alt Gr key
+                { PS2_ALT_GR + PS2_KEY_EUROPE2, '|' },
+                { PS2_ALT_GR + 'm', PS2_MICRO_SIGN },  // µ
+                { PS2_ALT_GR + 'M', PS2_MICRO_SIGN },  // µ
+                };
+#endif
 #ifdef SPECIAL
 #if defined(PS2_REQUIRES_PROGMEM)
 const uint16_t PROGMEM _SpecialMap[][ 2 ] = {
@@ -397,6 +458,9 @@ const PS2Advmap _KeyMaps[ ] = {
 #endif
 #ifdef ITALIAN
                 { "IT", sizeof( _ITmap ) / ( 2 * sizeof( uint16_t ) ), (uint16_t *)_ITmap },
+#endif
+#ifdef SWEDISH
+                { "SE", sizeof( _SEmap ) / ( 2 * sizeof( uint16_t ) ), (uint16_t *)_SEmap },
 #endif
 #ifdef SPECIAL
                 { "--", sizeof( _SpecialMap ) / ( 2 * sizeof( uint16_t ) ), (uint16_t* )_SpecialMap },

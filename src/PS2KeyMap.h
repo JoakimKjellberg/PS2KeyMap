@@ -6,6 +6,7 @@
   Updated January 2016 - Paul Carpenter - add tested on Due and tidy ups for V1.5 Library Management
 	January 2020 - Paul Carpenter - extend library properties for V2.2 of Arduino Library Management
     March 2020 - Paul Carpenter - add Spanish and Italian Mappings
+    May 2021 - Joakim Kjellberg - add Swedish mapping
 
    IMPORTANT WARNING
     If using a DUE or similar board with 3V3 I/O you MUST put a level translator
@@ -37,6 +38,7 @@
     //#define FRENCH
     //#define SPANISH
     //#define ITALIAN
+    //#define SWEDISH
     //#define SPECIAL
 
   The functions in this library takes the unsigned int values produced from
@@ -134,6 +136,7 @@
 #define FRENCH
 #define SPANISH
 #define ITALIAN
+#define SWEDISH
 //#define SPECIAL
 
 /* UTF-8 single byte LATIN encodings

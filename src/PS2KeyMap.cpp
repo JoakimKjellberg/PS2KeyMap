@@ -6,6 +6,7 @@
   Updated January 2016 - Paul Carpenter - add tested on Due and tidy ups for V1.5 Library Management
 	January 2020 - Paul Carpenter - extend library properties for V2.2 of Arduino Library Management
     March 2020 - Paul Carpenter - add Spanish and Italian Mappings
+    May 2021 - Joakim Kjellberg - add Swedish mapping
 
   IMPORTANT WARNING
     If using a DUE or similar board with 3V3 I/O you MUST put a level translator
@@ -26,6 +27,7 @@
     FR - French if define FRENCH exists
     ES - Spanish if define SPANISH exists
     IT - Italian if define ITALIAN exists
+    SE - Swedish if define SWEDISH exists
     --   Special if you have created your own mapping see PS2KeyMap.h
 
   US and UK mappings are base layouts always compiled. All mappings are done
@@ -47,6 +49,7 @@
     //#define FRENCH
     //#define SPANISH
     //#define ITALIAN
+    //#define SWEDISH
     //#define SPECIAL
 
   Library converts key codes from PS2KeyAdvanced to enable full ASCCII/UTF-8
